@@ -1,0 +1,44 @@
+#!/usr/bin/python
+def main():
+    import sys
+    from Bio.Seq import Seq
+    from Bio.Alphabet import IUPAC
+    from Bio import SeqIO
+    #from Bio.Align.Applications import ClustalOmegaCommandline
+    #from Bio.Align.Applications import ClustalwCommandline
+    import subprocess
+    
+    inputfile1 = open(sys.argv[1],'r') # fasta file
+    inputfile2 = open(sys.argv[1],'r') # homologen numbering
+    
+    dic = {}
+    for x in SeqIO.parse(inputfile1,'fasta'):
+        header = x.description
+        seq = str(x.seq)
+        header_ls = header.split('|')
+        pepseq = header_ls[5]
+        header_seq = '>' + header + '\n' + seq
+        dic[header_seq] = pepseq
+        
+    for y in inputfile2:
+        y_sp = y.strip()
+        app = []
+        for k,v in dic.iteritems():
+            if v == y_sp:
+                app.append(k)
+        sorted_app = sorted(app)
+        outfile = '\n'.join(sorted_app)
+        outputfilename = y_sp + '.fasta'
+        outputfile = open(outputfilename,'w')
+        outputfile.write(outfile)
+    
+    
+    inputfile2.seek(0)
+    for y in inputfile2:
+        y_sp = y.strip()
+        inputfile = y_sp + '.fasta'
+        outputfile = y_sp + '_aligned.txt'
+        subprocess.call(['clustalo','-i',inputfile,'-o',outputfile,'--outfmt=clu'])
+        
+if __name__ == "__main__":
+    main()
