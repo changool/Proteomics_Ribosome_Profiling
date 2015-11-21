@@ -11,7 +11,7 @@ def modification_date(filename):
     return datetime.datetime.fromtimestamp(t)
    
 #dirpath = "H:\Elite Data Back UP"
-dirpath = "H:\Elite Data Back UP"
+dirpath = "E:\Elite Data Back UP"
 extention_name = ".raw"
 outputfilename = "summary.txt"
 outputfile = open(dirpath + '\\' + outputfilename, 'w')
