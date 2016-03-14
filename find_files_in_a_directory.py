@@ -1,15 +1,15 @@
 # This code will return files ends with a certain string in a dirctory
 import os
 import datetime
-#import sys
+import sys
 
-
+inputfile01 = open(sys.argv[1],'r')
 def modification_date(filename):
     t = os.path.getmtime(filename)
     return datetime.datetime.fromtimestamp(t)
    
 #dirpath = "G:\Chan_Documents\N-term_pep\HPM_unmatched_spectra"
-dirpath = "G:\Chan_Documents\N-term_pep\HPM_unmatched_spectra\HPM_unmatched_spectra_UTR_ORF\exported_txt_files"
+dirpath = "C:\Users\Chan-Hyun\VirtualBoxShare\Nterm\JPT_synthetic_pep\synthetic_pep"
 extention_name = ".txt"
 outputfile = open(dirpath + '\\' + 'all.txt','w')
 

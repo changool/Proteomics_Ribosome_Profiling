@@ -5,40 +5,26 @@ from Bio.Seq import Seq
 from Bio import SeqIO
 
 inputfile1 = open (sys.argv[1], 'r') # mRNA_Accession|peptide list
-inputfile2 = open (sys.argv[2], 'r') # gene to accessions
-inputfile3 = open (sys.argv[3], 'r') # RNAseq database
-outputfile = open (sys.argv[4], 'w')
+inputfile2 = open (sys.argv[2], 'r') # RNAseq database
+outputfile = open (sys.argv[3], 'w')
 
-print "Making dictionary for gene symbol to accessions"
-dic3 = {}
-for num2, xxx in enumerate(inputfile2): # accession to gene symbol
-     xxxsplit = xxx.split("\t")
-     rnaacc = xxxsplit[3].strip()
-     rnaacclist= rnaacc.split(".")
-#     rnagi  = xxxsplit[4].strip()
-#     proacc = xxxsplit[5].strip()
-#     proacclist = proacc.split(".")
-#     progi  = xxxsplit[6].strip()
-     genesym= xxxsplit[15].strip()
-#     dic1[proacclist[0]] = rnaacclist[0]
-     dic3[rnaacclist[0]] = genesym
 
 print "Making dictionary for mRNA accession and mRNA sequence"
 dic4 = {}
-for x in SeqIO.parse(inputfile3,"fasta"): #rna sequence fast format database
+for x in SeqIO.parse(inputfile1,"fasta"): #rna sequence fast format database
    header = x.description
    mrnaseq = str(x.seq)
-   if "NM_" in header:
-        headersplit = header.split(" ")
-        mrnaacce0 = headersplit[0].strip()
-        dic4[mrnaacce0] = mrnaseq
+   headersplit = header.split("|")
+   acce = headersplit[1].strip().split(".")
+   acc0 = acce[0]
+   dic4[acc0] = mrnaseq
 
 
 print "Finding right codons"
-head = 'mRNA accession'+"|"+'mRNA accession'+"|"+ "gene symbol" + "|" + 'peptide sequence' + "|" + 'peptide position in translated mRNA' + "|" + 'translated protein seq' + "|" + 'peptide seq from -3 to 10' + "|" + 'mRNA sequence' + "|" + 'mRNA sequence from -9 to 30' + "|" + 'mRNA seq from -9 to -7' + "|" +  'mRNA sequence from -6 to -4' + "|" + 'mRNA seq from -3 to -1' + "|" + 'mRNA seq from 1 to 3' + '\n'                    
+head = 'mRNA accession'+"|"+'mRNA accession'+"|"+ 'peptide sequence' + "|" + 'peptide position in translated mRNA' + "|" + 'translated protein seq' + "|" + 'peptide seq from -3 to 10' + "|" + 'mRNA sequence' + "|" + 'mRNA sequence from -9 to 30' + "|" + 'mRNA seq from -9 to -7' + "|" +  'mRNA sequence from -6 to -4' + "|" + 'mRNA seq from -3 to -1' + "|" + 'mRNA seq from 1 to 3' + '\n'                    
 outputfile.write(head)
 
-for num10, yy in enumerate(inputfile1): #mRNA accession|peptide sequence
+for num10, yy in enumerate(inputfile2): #mRNA accession|peptide sequence
     if num10%200 == 0:
        print num10
     yy_strip = yy.strip()
@@ -48,9 +34,7 @@ for num10, yy in enumerate(inputfile1): #mRNA accession|peptide sequence
     pep = yy_split[1].strip()
     outputfile.write(mrnaacce2+"|")
     mrseq = dic4.get(mrnaacce2)
-    genesym1 = dic3.get(mrnaacce2)
-    if genesym1 == None:
-        genesym1 = "No_Match"
+
     if mrseq != None:
 	       seq1 = mrseq[0:].strip()
 	       seq2 = mrseq[1:].strip() 
@@ -94,7 +78,7 @@ for num10, yy in enumerate(inputfile1): #mRNA accession|peptide sequence
 	       seq2_rep = seq2_trans_strip.replace("*","^")
 	       seq3_rep = seq3_trans_strip.replace("*","^")
 	       
-	       result1 = mrnaacce2 + "|" + genesym1 + "|" + pep
+	       result1 = mrnaacce2 + "|" + pep
                outputfile.write(result1)
 	      
 

@@ -17,11 +17,12 @@ inputfile1 = open(sys.argv[1],'r')
 outputfile = open(sys.argv[2],'w')
 
 for num, x in enumerate(SeqIO.parse(inputfile1,'fasta')):
-            header = x.description
-            mrnaseq = str(x.seq)
-
-	    if num%200 == 0:
-	       print num
+        if num%2000 == 0:
+            print num
+        header = x.description
+        mrnaseq = str(x.seq)
+        hd_ls = header.split('_')
+        if hd_ls[0] == 'NM':
 	    
 	    if len(mrnaseq)%3 == 0:
 	       orfcut = mrnaseq
@@ -35,8 +36,20 @@ for num, x in enumerate(SeqIO.parse(inputfile1,'fasta')):
 	    seq_trans3 = str(Seq(orfcut[2:-1]).translate().strip())
 	    combined_seq_trans = seq_trans1 + '*' + seq_trans2 + '*' + seq_trans3
 	    seq_split = combined_seq_trans.split("*")
-	    longestorf = max(seq_split,key=len)
-	    if len(longestorf) >= 6: # Take peptides longer than 6 aa 
-	       result = '>' + header + '\n' + longestorf + "\n"
-	       outputfile.write(result)
+	    MtoStop = []
+	    for y in seq_split:
+	        M_pos = y.find('M')
+	        MtoStop.append(y[M_pos:])
+	    longestorf = max(MtoStop,key=len)
+
+
+       	    if len(longestorf)/(float(len(mrnaseq))/3) < 0.2: # Take peptides longer than 6 aa 
+       	        stoptostop = []
+       	        for yy in seq_split:
+       	            if longestorf not in yy:
+       	                stoptostop.append(yy)
+       	        if len(max(stoptostop,key=len))/(float(len(mrnaseq))/3)>0.4:       	        
+
+        	       result = '>' + header + '\n' + max(stoptostop,key=len)+'\n'
+        	       outputfile.write(result)
 

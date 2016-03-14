@@ -145,7 +145,7 @@ for num3, z in enumerate(templist1): # -1_pos_AA|pep_seq|pro_acc|pos|ATG_classif
 
 print "Making dictionary for mRNA accession and mRNA sequence"
 dic4 = {}
-for x in SeqIO.parse(inputfile5,"fasta"): #rna sequence fast format database: gff format
+for x in SeqIO.parse(inputfile5,"fasta"): #rna sequence fast format database
    header = x.description
    mrnaseq = str(x.seq)
    headersplit = header.split(" ")
@@ -154,14 +154,7 @@ for x in SeqIO.parse(inputfile5,"fasta"): #rna sequence fast format database: gf
    mrnaacce0 = headersplit[0].replace("hg19_refGene_","")
    dic4[mrnaacce0] = mrnaseq
 
-#for x in SeqIO.parse(inputfile5,"fasta"): #rna sequence fast format database
-#   header = x.description
-#   mrnaseq = str(x.seq)
-#   headersplit = header.split(" ")
-##   mrnaacce = headersplit[3].split(".")
-##   mrnaacce0 = mrnaacce[0].strip()
-#   mrnaacce0 = headersplit[0].replace("hg19_refGene_","")
-#   dic4[mrnaacce0] = mrnaseq
+
 
 print "Finding right codons"
 head = "-1_pos_AA" +'|'+ "pep_seq" + '|' + "pro_acc" + '|' + "pep_pos" + '|' + "ATG_classification" + "|" + 'mRNA accession' + "|" + "Gene Symbol" + "|" + 'mRNA accession' + "|" + 'peptide sequence' + "|" + 'peptide position in translated mRNA' + "|" + 'translated protein seq' + "|" + 'peptide seq from -3 to 10' + "|" + 'mRNA sequence' + "|" + 'mRNA sequence from -9 to 30' + "|" + 'mRNA seq from -9 to -7' + "|" +  'mRNA sequence from -6 to -4' + "|" + 'mRNA seq from -3 to -1' + "|" + 'mRNA seq from 1 to 3' + '\n'                    

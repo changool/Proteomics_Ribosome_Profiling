@@ -2,37 +2,44 @@
 
 import sys
 from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
 from Bio import SeqIO
 
 inputfile1 = open (sys.argv[1], 'r') # protein database in fasta format
-inputfile2 = open (sys.argv[2], 'r') # peptide list
-inputfile3 = open (sys.argv[3], 'r') # gene to accessions
-inputfile4 = open (sys.argv[4], 'r') # RNAseq database
-outputfile = open (sys.argv[5], 'w')
+inputfile2 = open (sys.argv[2], 'r') # protein database for UTR in fasta format
+inputfile3 = open (sys.argv[3], 'r') # peptide list
+inputfile4 = open (sys.argv[4], 'r') # gene to accessions
+inputfile5 = open (sys.argv[5], 'r') # RNAseq database
+outputfile = open (sys.argv[6], 'w')
 
 dic = {}
 print "Generating dictionary for protein accession and sequence"
-#for num, x in enumerate(SeqIO.parse(inputfile1,"fasta")): # NCBI format
-#    header = x.description
-#    seq = str(x.seq)
-#    x_ls = header.split("|")
-##    gi = x_ls[1]
-#    acc = x_ls[3].split('.')
-#    acc0 = acc[0]
-#    dic[seq] = acc0
-for num, x in enumerate(SeqIO.parse(inputfile1,"fasta")): # rff format
+for num, x in enumerate(SeqIO.parse(inputfile1,"fasta")):
     header = x.description
     seq = str(x.seq)
-    x_ls = header.split(" ")
-#    gi = x_ls[1]
-    acc = x_ls[0].split('.')
-    acc0 = acc[0]
-    dic[seq] = acc0
-    print dic
+    x_ls = header.split("|")
+    try:
+        acc = x_ls[3].split('.')
+        acc0 = acc[0]
+        dic[seq] = acc0
+    except:
+        continue
+#dic11 = {}
+#for num, x1 in enumerate(SeqIO.parse(inputfile2,"fasta")):
+#    header = x1.description
+#    seq = str(x1.seq)
+#    x1_ls = header.split(" ")
+#    acc_gene = x1_ls[1].replace("#","|")
+#    dic11[seq] = acc_gene
+
+dic11 = {}
+for num, x1 in enumerate(SeqIO.parse(inputfile2,"fasta")):
+    header = x1.description
+    seq = str(x1.seq)
+    dic11[seq] = header+"|"
+
 templist = []
 print "Working on peptide list"
-for num1, y in enumerate(inputfile2):
+for num1, y in enumerate(inputfile3):
     if num1%100==0:
         print num1
     y_st = y.strip()     
@@ -58,12 +65,26 @@ for num1, y in enumerate(inputfile2):
             result = m1posAA + "|" + y_st + "|" + v + "|" + seq_pos + "|" + atgclass + ";"
             tempstr = tempstr + result
     if len(tempstr) == 0:
-        tempstr = "-" + "|" + y_st + "|" + "no_match" + "|" + '-' + "|" + "UTR" + ';'
+        for kk, vv in dic11.iteritems():
+            if y_st in kk:
+                seq_pos11 = str(kk.find(y_st) + 1)
+                if int(seq_pos11) == 1:
+                    m1posAA = "-"
+                else:
+                    m1posAA = k[int(seq_pos11)-2]
+                vv_ls = vv.split("|")
+                mrnaacc11 = vv_ls[0].strip()
+                result11 = m1posAA + "|" + y_st + "|" + mrnaacc11 + "|" + seq_pos11 + "|" + "UTR" + "|" + vv.strip() + ";"
+                tempstr = tempstr + result11
+    if len(tempstr) == 0:
+        print "for", y_st, "tempstr is empty"
+        exit()            
     templist.append(tempstr)
 
 print "Assorting min and max position"
 templist1 = []
 for xx in templist:
+  try:  
     xx_st = xx.strip()
 #    print xx_st
     xx_ls = xx_st.split(";")
@@ -80,18 +101,19 @@ for xx in templist:
            else:
               dic2[yy.strip()] = pos
     if len(dic1) == 0:
-        if 'XP_' in dic2.keys()[0]:
-            min_result = min(dic2,key=dic2.get)        
-            templist1.append(min_result)
-        else:
-            templist1.append(xx_ls[0])
+        min_result = min(dic2,key=dic2.get)        
+        templist1.append(min_result)
+
     else:
         min_result = min(dic1,key=dic1.get)
         templist1.append(min_result)
+  except:
+      print xx_st
+      exit()      
 
 print "Making dictionary for gene symbol to accessions"
 dic3 = {}
-for num2, xxx in enumerate(inputfile3): # accession to gene symbol
+for num2, xxx in enumerate(inputfile4): # accession to gene symbol
      xxxsplit = xxx.split("\t")
      rnaacc = xxxsplit[3].strip()
      rnaacclist= rnaacc.split(".")
@@ -113,12 +135,14 @@ for num3, z in enumerate(templist1): # -1_pos_AA|pep_seq|pro_acc|pos|ATG_classif
      if proacc00 in dic3.keys():
          v1 = dic3.get(proacc00)
          templist2.append(z + "|" + v1)
+     elif 'NM_' in z.strip():
+         templist2.append(z)
      else:
-         templist2.append(z + "|")
+         templist2.append(z + "|" + "no_match" "|" + "no_match")
 
 print "Making dictionary for mRNA accession and mRNA sequence"
 dic4 = {}
-for x in SeqIO.parse(inputfile4,"fasta"): #rna sequence fast format database
+for x in SeqIO.parse(inputfile5,"fasta"): #rna sequence fast format database
    header = x.description
    mrnaseq = str(x.seq)
    headersplit = header.split(" ")
@@ -131,21 +155,20 @@ for x in SeqIO.parse(inputfile4,"fasta"): #rna sequence fast format database
 print "Finding right codons"
 head = "-1_pos_AA" +'|'+ "pep_seq" + '|' + "pro_acc" + '|' + "pep_pos" + '|' + "ATG_classification" + "|" + 'mRNA accession' + "|" + "Gene Symbol" + "|" + 'mRNA accession' + "|" + 'peptide sequence' + "|" + 'peptide position in translated mRNA' + "|" + 'translated protein seq' + "|" + 'peptide seq from -3 to 10' + "|" + 'mRNA sequence' + "|" + 'mRNA sequence from -9 to 30' + "|" + 'mRNA seq from -9 to -7' + "|" +  'mRNA sequence from -6 to -4' + "|" + 'mRNA seq from -3 to -1' + "|" + 'mRNA seq from 1 to 3' + '\n'                    
 outputfile.write(head)
-for num10, y in enumerate(templist2): #-1_pos_AA|pep_seq|pro_acc|pos|ATG_classification|mRNA_acc|Gene_sym
+
+try:
+ for num10, yy in enumerate(templist2): #-1_pos_AA|pep_seq|pro_acc|pos|ATG_classification|mRNA_acc|Gene_sym
     if num10%200 == 0:
        print num10
-    y_strip = y.strip()
-    y_split = y_strip.split("|")
-    mrnaacce1 = y_split[5].split(".")
+    yy_strip = yy.strip()
+    yy_split = yy_strip.split("|")
+    mrnaacce1 = yy_split[5].split(".")
     mrnaacce2 = mrnaacce1[0].strip()
-    pep = y_split[1].strip()
-    result0 = y_strip + "|"
+    pep = yy_split[1].strip()
+    result0 = yy_strip + "|"
     outputfile.write(result0)
-    
-    for k,v in dic4.iteritems(): # mRNA_accession : mRNA_sequence
-	k_strip = k.strip()
-	
-	if mrnaacce2 == k_strip:
+    v = dic4.get(mrnaacce2)
+    if v != None:
 	       seq1 = v[0:].strip()
 	       seq2 = v[1:].strip() 
 	       seq3 = v[2:].strip() 
@@ -188,7 +211,7 @@ for num10, y in enumerate(templist2): #-1_pos_AA|pep_seq|pro_acc|pos|ATG_classif
 	       seq2_rep = seq2_trans_strip.replace("*","^")
 	       seq3_rep = seq3_trans_strip.replace("*","^")
 	       
-	       result1 = k_strip + "|" + pep
+	       result1 = mrnaacce2 + "|" + pep
                outputfile.write(result1)
 	      
 
@@ -219,8 +242,10 @@ for num10, y in enumerate(templist2): #-1_pos_AA|pep_seq|pro_acc|pos|ATG_classif
 		    outputfile.write(result)
 
 	       else:
-		    result = "No maching frame found"
+		    result = "|No maching frame found"
 		    outputfile.write(result)
 		    
     newline = "\n"
     outputfile.write(newline)
+except:
+    print yy, "did not work in finding codon"

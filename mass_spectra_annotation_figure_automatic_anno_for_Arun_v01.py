@@ -8,7 +8,7 @@ from os import listdir
 from os.path import isfile, join
 from matplotlib import rc
 
-intensity_threshold = 5 # Set intensity to put label (0% to 100%)
+intensity_threshold = 1 # Set intensity to put label (0% to 100%)
 currentpath = os.getcwd()
 files_in_the_folder = [ f for f in listdir(currentpath) if isfile(join(currentpath,f)) ]
 for filenum, filename in enumerate(files_in_the_folder):
@@ -98,7 +98,7 @@ for filenum, filename in enumerate(files_in_the_folder):
                 txtcolor = 'blue'       
             if y != t and len(a)> 0:
                 axis.text(x+10, t, a ,rotation=0, color=txtcolor,horizontalalignment='center',style = 'normal')
-                axis.arrow(x,t,0,y-t, color=txtcolor,alpha=0.6, width=0.5,
+                axis.arrow(x,t,0,y-t, color=txtcolor,alpha=0.3, width=0.3,
                         head_width=0, head_length=0, 
                         zorder=0,length_includes_head=False,linestyle = 'dotted')
             else:
@@ -115,7 +115,7 @@ for filenum, filename in enumerate(files_in_the_folder):
     #rc('text', usetex=True)  
               
     #GOOD PLOT:
-    fig2 = plt.figure(figsize=(12,4))
+    fig2 = plt.figure(figsize=(6,6))
     ax2 = fig2.add_subplot(111)
     for xx,yy,zz in zip (x_data,y_data,annolist1):
         if 'b' not in zz and 'y' not in zz:
@@ -140,7 +140,7 @@ for filenum, filename in enumerate(files_in_the_folder):
     plt.ylim(0,max(text_positions)+2*txt_height)
     
     fig_title_ls = fig_title.split('_')
-    plt.title('Ac-'+fig_title_ls[0],fontsize = 20, y = 1.04)
+    plt.title(fig_title_ls[0],fontsize = 20, y = 1.04)
     plt.subplots_adjust(top=0.85)
     plt.subplots_adjust(bottom=0.17)
 

@@ -6,8 +6,10 @@ import pylab
 import re
 from os import listdir
 from os.path import isfile, join
-from matplotlib import rc
 
+# instructions
+# You make a folder named 'synthetic_pep' and 'real_pep'. Put your text files there
+# Precursor mass will be removed from the figure
 ####################################################################################################
 #method for putting annotation
 def get_text_positions(x_data, y_data, txt_width, txt_height):
@@ -40,7 +42,7 @@ def text_plotter(x_data, y_data, text_positions, axis, annolist1,txt_width,txt_h
             txtcolor = 'blue'       
         if y != t and len(a)> 0:
             axis.text(x+10, t, a ,rotation=0, color=txtcolor,horizontalalignment='center',style = 'normal')
-            axis.arrow(x,t,0,y-t, color=txtcolor,alpha=0.6, width=0.5,
+            axis.arrow(x,t,0,y-t, color=txtcolor,alpha=0.4, width=0.5,
                     head_width=0, head_length=0, 
                     zorder=0,length_includes_head=False,linestyle = 'dotted')
         else:
@@ -53,8 +55,8 @@ real_pep_path = currentpath + '/real_pep'
 synthetic_pep_files_in_the_folder = [ f for f in listdir(synthetic_pep_path) if isfile(join(synthetic_pep_path,f)) ]
 real_pep_files_in_the_folder       = [ f for f in listdir(real_pep_path) if isfile(join(real_pep_path,f)) ]
 for filenum, filename in enumerate(real_pep_files_in_the_folder):
-    
-    inputfile = open(filename, 'r')
+ #if 'AAAAAGANLGDR' in filename:    
+    inputfile = open(real_pep_path+ '/'+filename, 'r')
     fig_title = filename
     pep_seq_ls = filename.split('_')
     pep_seq = pep_seq_ls[0]
@@ -110,8 +112,8 @@ for filenum, filename in enumerate(real_pep_files_in_the_folder):
     masslist1=np.array(masslist,dtype='f');intenlist1=np.array(intenlist,dtype='f');annolist1=np.array(annolist_new)
     
     for filenum_1, filename_1 in enumerate(synthetic_pep_files_in_the_folder):
-        
-        inputfile_1 = open(filename_1, 'r')
+      #if 'AAAAAGANLGDR' in filename:   
+        inputfile_1 = open(synthetic_pep_path+ '/'+filename_1, 'r')
         fig_title_1 = filename_1  
         pep_seq_1_ls = filename_1.split('_')
         pep_seq_1 = pep_seq_1_ls[0]      
@@ -127,7 +129,7 @@ for filenum, filename in enumerate(real_pep_files_in_the_folder):
                             number_1= num_1 + 1; numlist_1.append(number_1)
                             mass_1  = float(x_sp_1[0]); masslist_1.append(mass_1)
                             inten_1 = float(x_sp_1[1]); intenlist0_1.append(inten_1)
-                            intenlist_1  = [y_1 / max(intenlist0)*100 for y_1 in intenlist0_1]
+                            intenlist_1  = [y_1 / max(intenlist0_1)*100 for y_1 in intenlist0_1]
                             anno_1  = x_sp_1[2].strip(); annolist_1.append(anno_1)
                     elif len(x_sp_1) == 2:
                             number_1= num_1 + 1; numlist_1.append(number_1)
@@ -171,8 +173,9 @@ for filenum, filename in enumerate(real_pep_files_in_the_folder):
             y_data = intenlist1
             x_data_1 = masslist1_1
             y_data_1 = intenlist1_1
+            x_merge = [min(x_data),max(x_data),min(x_data_1),max(x_data_1)]
                   
-            fig = plt.figure(figsize=(12,8))
+            fig = plt.figure(figsize=(12,10))
             
             #Upper figure
             ax1 = fig.add_subplot(211)
@@ -182,7 +185,7 @@ for filenum, filename in enumerate(real_pep_files_in_the_folder):
                 elif 'y' in zz:
                     ax1.vlines(xx,0,yy,linewidth = 1.5,color='blue')
                 else:
-                    ax1.vlines(xx,0,yy,linewidth = 1.5,color='black')
+                    ax1.vlines(xx,0,yy,linewidth = 1.5,color='gray')
             #plt.xlabel('m/z',fontstyle = 'italic')
             plt.ylabel('Relative intensity')
             plt.gca().get_xaxis().set_tick_params(which='both', direction='out')
@@ -194,12 +197,13 @@ for filenum, filename in enumerate(real_pep_files_in_the_folder):
             text_positions = get_text_positions(x_data, y_data, txt_width, txt_height)
             text_plotter(x_data, y_data, text_positions, ax1, annolist1, txt_width, txt_height)
             
+            plt.xlim(min(x_merge)-50,max(x_merge)+50)
             plt.ylim(0,max(text_positions)+2*txt_height)
             
-            combined_fig_title = fig_title+'\n'+fig_title_1
-            plt.title(combined_fig_title,fontsize = 20, y = 1.1)
+            #combined_fig_title = fig_title+'\n'+fig_title_1
+            plt.title('Ac-'+pep_seq+'\n\n'+'Peptide identified from sample',fontsize = 20, y = 1.02)
             plt.subplots_adjust(top=0.85)
-            plt.subplots_adjust(bottom=0.17)
+            plt.subplots_adjust(bottom=0.08)
 
             #Lower figure
             ax1_1 = fig.add_subplot(212)
@@ -209,29 +213,31 @@ for filenum, filename in enumerate(real_pep_files_in_the_folder):
                 elif 'y' in zz_1:
                     ax1_1.vlines(xx_1,0,yy_1,linewidth = 1.5,color='blue')
                 else:
-                    ax1_1.vlines(xx_1,0,yy_1,linewidth = 1.5,color='black')
+                    ax1_1.vlines(xx_1,0,yy_1,linewidth = 1.5,color='gray')
             plt.xlabel('m/z',fontstyle = 'italic')
             plt.ylabel('Relative intensity')
             plt.gca().get_xaxis().set_tick_params(which='both', direction='out')
             plt.gca().get_yaxis().set_tick_params(which='both', direction='out')
             #set the bbox for the text. Increase txt_width for wider text.
-            txt_height = 0.05*(plt.ylim()[1] - plt.ylim()[0])
-            txt_width = 0.03*(plt.xlim()[1] - plt.xlim()[0])
+            txt_height_1 = 0.05*(plt.ylim()[1] - plt.ylim()[0])
+            txt_width_1 = 0.03*(plt.xlim()[1] - plt.xlim()[0])
             #Get the corrected text positions, then write the text.
-            text_positions_1 = get_text_positions(x_data_1, y_data_1, txt_width, txt_height)
-            text_plotter(x_data_1, y_data_1, text_positions_1, ax1_1, annolist1_1, txt_width, txt_height)
+            text_positions_1 = get_text_positions(x_data_1, y_data_1, txt_width_1, txt_height_1)
+            text_plotter(x_data_1, y_data_1, text_positions_1, ax1_1, annolist1_1, txt_width_1, txt_height_1)
             
-            plt.ylim(0,max(text_positions)+2*txt_height)
             
-            plt.subplots_adjust(top=0.85)
-            plt.subplots_adjust(bottom=0.17)        
+            plt.xlim(min(x_merge)-50,max(x_merge)+50)
+            plt.ylim(0,max(text_positions_1)+2*txt_height_1)
+            plt.title('Synthetic peptide',fontsize = 20, y = 1.02)
+            #plt.subplots_adjust(top=0.85)
+            #plt.subplots_adjust(bottom=0.17)        
                         
-            plt.show();exit()
+            #plt.show();exit()
             
             if not os.path.exists('combined_figures'):
                 os.makedirs('combined_figures')
             currentpath = os.getcwd()
-            path = currentpath + '/'+"combined_figures"+'/' + 'combined_' +fig_title + '.png'
-            print filenum, combined_fig_title
-            plt.savefig(path, format = 'png', dpi = 600)
+            path = currentpath + '/'+"combined_figures"+'/' +str(filenum)+'_'+str(filenum_1)+'_combined_' +fig_title + '.pdf'
+            print filenum, fig_title
+            plt.savefig(path, format = 'pdf', dpi = 600)
             plt.close()

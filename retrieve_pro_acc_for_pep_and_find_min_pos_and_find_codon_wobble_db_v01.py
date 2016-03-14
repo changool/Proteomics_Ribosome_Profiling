@@ -4,6 +4,7 @@ import sys
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from Bio import SeqIO
+import re
 
 inputfile1 = open (sys.argv[1], 'r') # protein database in fasta format
 inputfile2 = open (sys.argv[2], 'r') # peptide list
@@ -21,15 +22,25 @@ print "Generating dictionary for protein accession and sequence"
 #    acc = x_ls[3].split('.')
 #    acc0 = acc[0]
 #    dic[seq] = acc0
+#for num, x in enumerate(SeqIO.parse(inputfile1,"fasta")): # rff format
+#    header = x.description
+#    seq = str(x.seq)
+#    x_ls = header.split(" ")
+##    gi = x_ls[1]
+#    acc = x_ls[0].split('.')
+#    acc0 = acc[0]
+#    dic[seq] = acc0
 for num, x in enumerate(SeqIO.parse(inputfile1,"fasta")): # rff format
     header = x.description
     seq = str(x.seq)
-    x_ls = header.split(" ")
+    x_ls = header.split("|")
 #    gi = x_ls[1]
     acc = x_ls[0].split('.')
     acc0 = acc[0]
-    dic[seq] = acc0
-    print dic
+    acc0_ls = re.findall('^(\w\w_\d*)_frame?',acc0)
+    acc00 = acc0_ls[0]
+    dic[seq] = acc00
+
 templist = []
 print "Working on peptide list"
 for num1, y in enumerate(inputfile2):
@@ -55,7 +66,7 @@ for num1, y in enumerate(inputfile2):
                     atgclass = "ATG_down"
                 else:
                     atgclass = "nonATG_down"   
-            result = m1posAA + "|" + y_st + "|" + v + "|" + seq_pos + "|" + atgclass + ";"
+            result = m1posAA + "|" + y_st + "|" + v + "|" + seq_pos + "|" + atgclass + ";" # y_st is peptide, v is accession
             tempstr = tempstr + result
     if len(tempstr) == 0:
         tempstr = "-" + "|" + y_st + "|" + "no_match" + "|" + '-' + "|" + "UTR" + ';'
@@ -63,7 +74,8 @@ for num1, y in enumerate(inputfile2):
 
 print "Assorting min and max position"
 templist1 = []
-for xx in templist:
+
+for xx in templist: # This is for customized DB with mRNA accession for protein. This is for finding min position for NP entries
     xx_st = xx.strip()
 #    print xx_st
     xx_ls = xx_st.split(";")
@@ -75,12 +87,12 @@ for xx in templist:
            yy_split = yy.split("|")
            acc2=yy_split[2].strip()
            pos = yy_split[3].strip()
-           if "NP_" in acc2:
+           if "NM_" in acc2:
               dic1[yy.strip()] = pos
            else:
               dic2[yy.strip()] = pos
     if len(dic1) == 0:
-        if 'XP_' in dic2.keys()[0]:
+        if 'XM_' in dic2.keys()[0]:
             min_result = min(dic2,key=dic2.get)        
             templist1.append(min_result)
         else:
@@ -91,7 +103,7 @@ for xx in templist:
 
 print "Making dictionary for gene symbol to accessions"
 dic3 = {}
-for num2, xxx in enumerate(inputfile3): # accession to gene symbol
+for num2, xxx in enumerate(inputfile3): # accession to gene symbol This is for mRNA
      xxxsplit = xxx.split("\t")
      rnaacc = xxxsplit[3].strip()
      rnaacclist= rnaacc.split(".")
@@ -118,15 +130,23 @@ for num3, z in enumerate(templist1): # -1_pos_AA|pep_seq|pro_acc|pos|ATG_classif
 
 print "Making dictionary for mRNA accession and mRNA sequence"
 dic4 = {}
-for x in SeqIO.parse(inputfile4,"fasta"): #rna sequence fast format database
-   header = x.description
-   mrnaseq = str(x.seq)
+#for x in SeqIO.parse(inputfile4,"fasta"): #rna sequence fast format database: Refseq format
+#   header = x.description
+#   mrnaseq = str(x.seq)
+#   headersplit = header.split(" ")
+##   mrnaacce = headersplit[3].split(".")
+##   mrnaacce0 = mrnaacce[0].strip()
+#   mrnaacce0 = headersplit[0].replace("hg19_refGene_","")
+#   dic4[mrnaacce0] = mrnaseq
+   
+for q in SeqIO.parse(inputfile4,"fasta"): #rna sequence fast format database: rff format
+   header = q.description
+   mrnaseq = str(q.seq)
    headersplit = header.split(" ")
 #   mrnaacce = headersplit[3].split(".")
 #   mrnaacce0 = mrnaacce[0].strip()
-   mrnaacce0 = headersplit[0].replace("hg19_refGene_","")
-   dic4[mrnaacce0] = mrnaseq
-
+#   mrnaacce0 = headersplit[0].replace("hg19_refGene_","")
+   dic4[headersplit[0]] = mrnaseq
 
 print "Finding right codons"
 head = "-1_pos_AA" +'|'+ "pep_seq" + '|' + "pro_acc" + '|' + "pep_pos" + '|' + "ATG_classification" + "|" + 'mRNA accession' + "|" + "Gene Symbol" + "|" + 'mRNA accession' + "|" + 'peptide sequence' + "|" + 'peptide position in translated mRNA' + "|" + 'translated protein seq' + "|" + 'peptide seq from -3 to 10' + "|" + 'mRNA sequence' + "|" + 'mRNA sequence from -9 to 30' + "|" + 'mRNA seq from -9 to -7' + "|" +  'mRNA sequence from -6 to -4' + "|" + 'mRNA seq from -3 to -1' + "|" + 'mRNA seq from 1 to 3' + '\n'                    

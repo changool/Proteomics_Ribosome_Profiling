@@ -237,7 +237,7 @@ for filenum, filename in enumerate(real_pep_files_in_the_folder):
             if not os.path.exists('combined_figures'):
                 os.makedirs('combined_figures')
             currentpath = os.getcwd()
-            path = currentpath + '/'+"combined_figures"+'/' +str(filenum)+'_'+str(filenum_1)+'_combined_' +fig_title + '.png'
+            path = currentpath + '/'+"combined_figures"+'/' +str(filenum)+'_'+str(filenum_1)+'_combined_' +fig_title + '.pdf'
             print filenum, fig_title
-            plt.savefig(path, format = 'png', dpi = 600)
+            plt.savefig(path, format = 'pdf', dpi = 600)
             plt.close()
